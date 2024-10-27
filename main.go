@@ -1,6 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+    "fmt"
+    "os"
+)
+
+import "ChessGo/board"
 
 func main() {
     fmt.Println(`          _             _       _    _           _           _                  _          _                    _              _          _     
@@ -39,4 +45,34 @@ func main() {
 	// board
 	
 	// piece
+
+	board := board.InitializeBoard()
+
+	gameLoop(board)
+
+}
+
+func gameLoop(gameBoard *board.Board) {
+	reader := bufio.NewReader(os.Stdin)
+	var move string
+
+	for !gameOver() {
+		//display board
+		board.RenderBoard(gameBoard)
+
+		//ask player for move
+		fmt.Print("\nEnter your move: ")
+		move, _ = reader.ReadString('\n')
+		fmt.Print(move)
+
+		//check legal move
+
+		//perform move if legal
+
+		//else tell player illegal and ask again
+	}
+}
+
+func gameOver() bool {
+	return false
 }
