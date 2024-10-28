@@ -46,6 +46,11 @@ func main() {
 	
 	// piece
 
+	fmt.Print("Enter moves fromCol,fromRow,toCol,toRow\n")
+	fmt.Print("For example, 1,B,3,A\n")
+	fmt.Print("This would move the white knight to the position 3A\n\n")
+
+
 	board := board.InitializeBoard()
 
 	gameLoop(board)
