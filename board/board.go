@@ -1,9 +1,12 @@
 package board
 
-import "fmt"
-import "ChessGo/player"
+import (
+	"ChessGo/player"
+	"fmt"
+	"errors"
+)
 
-//board will be 2d array of characters representing Chess 
+//board will be 2d array of characters representing Chess
 const (
     Empty    string = "·"
     WPawn    string = "♙"
@@ -21,6 +24,8 @@ const (
 	WIDTH	 int   =  8
 	HEIGHT   int   =  8
 )
+
+var WhitePieces = [6]string{WPawn, WRook, WKing, WKnight, WQueen, WBishop}
 
 type Board struct {
 	pieces [HEIGHT][WIDTH]string
@@ -48,7 +53,7 @@ func RenderBoard(gameBoard *Board) {
 		colNumber--
 
 		for row := 0; row < WIDTH; row++ {
-			fmt.Print(" " + getBoardstring(col, row, gameBoard) + " ")
+			fmt.Print(" " + getBoardString(col, row, gameBoard) + " ")
 		}
 		fmt.Print("\n")
 	}
@@ -72,54 +77,99 @@ func RenderBoard(gameBoard *Board) {
 		//is move not attacking same team?
 			//can the current piece move to the position being requested?
 				//would this move put the current team into check?
-func AttemptMove(move *player.Move, gameBoard *Board) *string {
-	var errorMessage string = "Error: "
+func AttemptMove(move *player.Move, gameBoard *Board) error {
 
-	if moveWithinBoard(move, gameBoard) {
-		if pieceBelongsToPlayer(move, gameBoard) {
-			if !moveAttackingSameTeam(move, gameBoard) {
-				if validPieceMove(move, gameBoard) {
-					if !potentialCheck(move, gameBoard) {
-						//perform the actual move
-					} else {
-						errorMessage += "Would put you into check"
-					}
-				} else {
-					errorMessage += "Not a valid move for the Piece"
-				}
-			} else {
-				errorMessage += "Move attacking same Team"
-			}
-		} else {
-			errorMessage += "Piece Belongs to Other Player or move from position is empty" 
-		}
-	} else {
-		errorMessage += "Move not within Board"
+	if !moveWithinBoard(move) {
+		return errors.New("Move not within Board")
+	} 
+
+	if !pieceBelongsToPlayer(move, gameBoard) {
+		return errors.New("Piece Belongs to Other Player or move from position is empty")
+	} 
+
+	if moveAttackingSameTeam(move, gameBoard) {
+		return errors.New("Move attacking same Team")
 	}
 
-	return &errorMessage
+	if !validPieceMove(move, gameBoard) {
+		return errors.New("Not a valid move for the Piece")
+	} 
+
+	if potentialCheck(move, gameBoard) {
+		return errors.New("move puts in check")
+	} 
+
+	//if it reaches this point we will perform the move
+	
+
+	return nil
 }
 
+//also will check that it is not an empty piece being grabbed
 func pieceBelongsToPlayer(move *player.Move, gameBoard *Board) bool {
+	var fromPiece = getBoardString(move.FromCol, move.FromRow, gameBoard)
+
+	if fromPiece == Empty {
+		return false
+	}
+
+	if move.WhitePlayer {
+		return pieceBelongsToWhiteTeam(&fromPiece)
+	} else {
+		return !pieceBelongsToWhiteTeam(&fromPiece)
+	}
+}
+
+func pieceBelongsToWhiteTeam(piece *string) bool {
+	for _, v := range WhitePieces {
+		if *piece == v {
+			return true
+		}
+	}
+
 	return false
 }
 
-func moveWithinBoard(move *player.Move, gameBoard *Board) bool {
-	return false
+func moveWithinBoard(move *player.Move) bool {
+	return move.FromCol >= 0 && move.FromCol < HEIGHT &&
+		move.FromRow >= 0 && move.FromRow < WIDTH &&
+		move.ToCol >= 0 && move.ToCol < HEIGHT &&
+		move.ToRow >= 0 && move.ToRow < WIDTH
 }
 
 func moveAttackingSameTeam(move *player.Move, gameBoard *Board) bool {
-	return false
+	var fromPiece = getBoardString(move.FromCol, move.FromRow, gameBoard)
+	var toPiece = getBoardString(move.ToCol, move.ToRow, gameBoard)
+
+	return pieceBelongsToWhiteTeam(&fromPiece) == pieceBelongsToWhiteTeam(&toPiece)
 }
 
 func validPieceMove(move *player.Move, gameBoard *Board) bool {
-	return false
+	var fromPiece = getBoardString(move.FromCol, move.FromRow, gameBoard)
+
+	switch fromPiece {
+		case WBishop, BBishop:
+			return ValidBishopMove(move, gameBoard)
+		case WKing, BKing:
+			return ValidKingMove(move, gameBoard)
+		case WPawn, BPawn:
+			return ValidPawnMove(move, gameBoard)
+		case WRook, BRook:
+			return ValidRookMove(move, gameBoard)
+		case WQueen, BQueen:
+			return ValidQueenMove(move, gameBoard)
+		case WKnight, BKnight:
+			return ValidKnightMove(move, gameBoard)
+		default:
+			fmt.Println("Error: Unknown game piece for valid move check")
+			return false
+	}
 }
 
 func potentialCheck(move *player.Move, gameBoard *Board) bool {
 	return false
 }
 
-func getBoardstring(col int, row int, gameBoard *Board) string {
-	return gameBoard.pieces[col][row]
+func getBoardString(col int, row int, gameBoard *Board) string {
+	return gameBoard.pieces[row][col]
 }

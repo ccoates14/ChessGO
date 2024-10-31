@@ -1,9 +1,11 @@
 package player
 
 type Move struct {
-	fromCol int
-	fromRow int
+	FromCol int
+	FromRow int
 
-	toCol int
-	toRow int
+	ToCol int
+	ToRow int
+
+	WhitePlayer bool
 }
