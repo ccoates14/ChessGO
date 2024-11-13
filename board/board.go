@@ -77,6 +77,8 @@ func RenderBoard(gameBoard *Board) {
 		//is move not attacking same team?
 			//can the current piece move to the position being requested?
 				//would this move put the current team into check?
+
+//make this return the piece that was killed or empty if empty
 func AttemptMove(move *player.Move, gameBoard *Board) error {
 
 	if !moveWithinBoard(move) {
@@ -95,11 +97,19 @@ func AttemptMove(move *player.Move, gameBoard *Board) error {
 		return errors.New("Not a valid move for the Piece")
 	} 
 
-	if potentialCheck(move, gameBoard) {
+	//if it reaches this point we will perform the move
+	toPiece := setBoardString(move.ToCol, move.ToRow, gameBoard, getBoardString(move.FromCol, move.FromRow, gameBoard))
+	
+	//empty from Pos
+	currentPiece := setBoardString(move.FromCol, move.FromRow, gameBoard, Empty)
+
+	if inCheck(move, gameBoard) {
+		//undo the move
+		setBoardString(move.FromCol, move.FromRow, gameBoard, currentPiece)
+		setBoardString(move.ToCol, move.ToRow, gameBoard, toPiece)
+		
 		return errors.New("move puts in check")
 	} 
-
-	//if it reaches this point we will perform the move
 	
 
 	return nil
@@ -166,10 +176,23 @@ func validPieceMove(move *player.Move, gameBoard *Board) bool {
 	}
 }
 
-func potentialCheck(move *player.Move, gameBoard *Board) bool {
-	return false
+func inCheck(move *player.Move, gameBoard *Board) bool {
+	return PawnInCheck(move, gameBoard) ||
+		QueenInCheck(move, gameBoard) ||
+		KingInCheck(move, gameBoard) || 
+		RookInCheck(move, gameBoard) || 
+		KnightInCheck(move, gameBoard) ||
+		BishopInCheck(move, gameBoard)
 }
 
 func getBoardString(col int, row int, gameBoard *Board) string {
 	return gameBoard.pieces[row][col]
+}
+
+func setBoardString(col int, row int, gameBoard *Board, piece string) string {
+	currentPiece := getBoardString(col, row, gameBoard)
+
+	gameBoard.pieces[row][col] = piece
+
+	return currentPiece
 }

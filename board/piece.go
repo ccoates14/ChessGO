@@ -163,3 +163,412 @@ func ValidBishopMove(move *player.Move, gameBoard *Board) bool {
 
 	return true
 }
+
+func PawnInCheck(move *player.Move, gameBoard *Board) bool {
+	//at this point with all these potential in check methods we assume
+	//the move has already been performed
+	//use the to xy
+
+	verticalPawnDirection := -1
+
+	if !move.WhitePlayer {
+		verticalPawnDirection = 1
+	}
+
+	if move.ToRow + verticalPawnDirection >= 0 && move.ToRow + verticalPawnDirection < HEIGHT {
+		//check left
+		if move.ToCol - 1 >= 0 {
+			var potentialPawn = getBoardString(move.ToCol - 1, move.ToRow + verticalPawnDirection, gameBoard)
+			if (move.WhitePlayer && potentialPawn == BPawn) || (!move.WhitePlayer && potentialPawn == WPawn) {
+				return true
+			}
+		}
+
+		//check right
+		if move.ToCol + 1 < WIDTH {
+			var potentialPawn = getBoardString(move.ToCol + 1, move.ToRow + verticalPawnDirection, gameBoard)
+			if (move.WhitePlayer && potentialPawn == BPawn) || (!move.WhitePlayer && potentialPawn == WPawn) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func RookInCheck(move *player.Move, gameBoard *Board) bool {
+	//up down left right
+
+	//starting from king position
+	//move out in a cross shape and see if you encounter a rook of the opposing team
+
+	var up, down, left, right = move.ToRow - 1, move.ToRow + 1, move.ToCol - 1, move.ToCol + 1
+
+	for up - move.ToRow >= 0 {
+		var potentialRook = getBoardString(move.ToCol, up - move.ToRow, gameBoard)
+
+		if (potentialRook == BRook && move.WhitePlayer) || (potentialRook == WRook && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialRook != Empty {
+				break
+			}
+		}
+	}
+
+	for down + move.ToRow < HEIGHT {
+		var potentialRook = getBoardString(move.ToCol, down + move.ToRow, gameBoard)
+
+		if (potentialRook == BRook && move.WhitePlayer) || (potentialRook == WRook && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialRook != Empty {
+				break
+			}
+		}
+	}
+
+	for left - move.ToCol >= 0 {
+		var potentialRook = getBoardString(left - move.ToCol, move.ToRow, gameBoard)
+
+		if (potentialRook == BRook && move.WhitePlayer) || (potentialRook == WRook && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialRook != Empty {
+				break
+			}
+		}
+	}
+
+	for right + move.ToCol < WIDTH {
+		var potentialRook = getBoardString(right + move.ToCol, move.ToRow, gameBoard)
+
+		if (potentialRook == BRook && move.WhitePlayer) || (potentialRook == WRook && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialRook != Empty {
+				break
+			}
+		}
+	}
+
+	return false
+}
+
+func BishopInCheck(move *player.Move, gameBoard *Board) bool {
+	col, row := move.ToCol + 1, move.ToRow - 1
+
+	//right down - zero based
+	for col < WIDTH && row >= 0 {
+		var potentialBishop = getBoardString(col, row, gameBoard)
+
+		if (potentialBishop == BBishop && move.WhitePlayer) || (potentialBishop == WBishop && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialBishop != Empty {
+				break
+			}
+		}
+
+		col++
+		row--
+	}
+
+	col, row = move.ToCol - 1, move.ToRow - 1
+	//left down --zero based
+	for col < WIDTH && row >= 0 {
+		var potentialBishop = getBoardString(col, row, gameBoard)
+
+		if (potentialBishop == BBishop && move.WhitePlayer) || (potentialBishop == WBishop && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialBishop != Empty {
+				break
+			}
+		}
+
+		col--
+		row--
+	}
+
+
+
+	//diagonal right left up - zero based
+	col, row = move.ToCol + 1, move.ToRow + 1
+	//right up
+	for col < WIDTH && row >= 0 {
+		var potentialBishop = getBoardString(col, row, gameBoard)
+
+		if (potentialBishop == BBishop && move.WhitePlayer) || (potentialBishop == WBishop && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialBishop != Empty {
+				break
+			}
+		}
+
+		col++
+		row++
+	}
+
+	col, row = move.ToCol - 1, move.ToRow + 1
+	//left up zero based
+	for col < WIDTH && row >= 0 {
+		var potentialBishop = getBoardString(col, row, gameBoard)
+
+		if (potentialBishop == BBishop && move.WhitePlayer) || (potentialBishop == WBishop && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialBishop != Empty {
+				break
+			}
+		}
+
+		col--
+		row++
+	}
+
+
+
+	return false
+}
+
+func KingInCheck(move *player.Move, gameBoard *Board) bool {
+
+	if move.ToCol - 1 >= 0 {
+		potentialKing := getBoardString(move.ToCol - 1, move.ToRow, gameBoard)
+
+		if (potentialKing == BKing && move.WhitePlayer) || (potentialKing == WKing && !move.WhitePlayer) {
+			return true
+		}
+	}
+
+	if move.ToCol + 1 < WIDTH {
+		potentialKing := getBoardString(move.ToCol + 1, move.ToRow, gameBoard)
+
+		if (potentialKing == BKing && move.WhitePlayer) || (potentialKing == WKing && !move.WhitePlayer) {
+			return true
+		}
+	}
+
+	if move.ToRow - 1 >= 0 {
+		potentialKing := getBoardString(move.ToCol, move.ToRow - 1, gameBoard)
+
+		if (potentialKing == BKing && move.WhitePlayer) || (potentialKing == WKing && !move.WhitePlayer) {
+			return true
+		}
+	}
+
+	if move.ToRow < HEIGHT {
+		potentialKing := getBoardString(move.ToCol, move.ToRow + 1, gameBoard)
+
+		if (potentialKing == BKing && move.WhitePlayer) || (potentialKing == WKing && !move.WhitePlayer) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func KnightInCheck(move *player.Move, gameBoard *Board) bool {
+
+	//up two and left one
+	if move.ToRow - 2 >= 0 && move.ToCol - 1 >= 0 {
+		potentialKnight := getBoardString(move.ToCol - 1, move.ToRow - 2, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+
+	//up two and right one
+	if move.ToRow - 2 >= 0 && move.ToCol + 1 < WIDTH {
+		potentialKnight := getBoardString(move.ToCol + 1, move.ToRow - 2, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+
+	//down two and left one
+	if move.ToRow + 2 < HEIGHT && move.ToCol - 1 >= 0 {
+		potentialKnight := getBoardString(move.ToCol - 1, move.ToRow + 2, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+
+	//down two and right one
+	if move.ToRow + 2 < HEIGHT && move.ToCol - 1 >= 0 {
+		potentialKnight := getBoardString(move.ToCol + 1, move.ToRow + 2, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+
+	//left 2 and up one
+	if move.ToRow + 1 < HEIGHT && move.ToCol - 2 >= 0 {
+		potentialKnight := getBoardString(move.ToCol - 2, move.ToRow + 1, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+	//left 2 and down one
+	if move.ToRow - 1 >= 0 && move.ToCol - 2 >= 0 {
+		potentialKnight := getBoardString(move.ToCol - 2, move.ToRow - 1, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+
+	//right 2 and up one
+	if move.ToRow + 1 < HEIGHT && move.ToCol + 2 < WIDTH {
+		potentialKnight := getBoardString(move.ToCol + 2, move.ToRow + 1, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+	//right 2 and down one
+	if move.ToRow - 1 >= 0 && move.ToCol + 2 < WIDTH {
+		potentialKnight := getBoardString(move.ToCol + 2, move.ToRow - 1, gameBoard)
+
+		if (potentialKnight == WKnight && !move.WhitePlayer) || (potentialKnight == BKnight && move.WhitePlayer) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func QueenInCheck(move *player.Move, gameBoard *Board) bool {
+	//this is just a copy paste of bishop and rook it could later be refactored - I just want it to work for now
+	//bishop + rook
+	col, row := move.ToCol + 1, move.ToRow - 1
+
+	//right down - zero based
+	for col < WIDTH && row >= 0 {
+		var potentialQueen = getBoardString(col, row, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+
+		col++
+		row--
+	}
+
+	col, row = move.ToCol - 1, move.ToRow - 1
+	//left down --zero based
+	for col < WIDTH && row >= 0 {
+		var potentialQueen = getBoardString(col, row, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+
+		col--
+		row--
+	}
+
+
+
+	//diagonal right left up - zero based
+	col, row = move.ToCol + 1, move.ToRow + 1
+	//right up
+	for col < WIDTH && row >= 0 {
+		var potentialQueen = getBoardString(col, row, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+
+		col++
+		row++
+	}
+
+	col, row = move.ToCol - 1, move.ToRow + 1
+	//left up zero based
+	for col < WIDTH && row >= 0 {
+		var potentialQueen = getBoardString(col, row, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+
+		col--
+		row++
+	}
+
+	var up, down, left, right = move.ToRow - 1, move.ToRow + 1, move.ToCol - 1, move.ToCol + 1
+
+	for up - move.ToRow >= 0 {
+		var potentialQueen = getBoardString(move.ToCol, up - move.ToRow, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+	}
+
+	for down + move.ToRow < HEIGHT {
+		var potentialQueen = getBoardString(move.ToCol, down + move.ToRow, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+	}
+
+	for left - move.ToCol >= 0 {
+		var potentialQueen = getBoardString(left - move.ToCol, move.ToRow, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+	}
+
+	for right + move.ToCol < WIDTH {
+		var potentialQueen = getBoardString(right + move.ToCol, move.ToRow, gameBoard)
+
+		if (potentialQueen == BQueen && move.WhitePlayer) || (potentialQueen == WQueen && !move.WhitePlayer) {
+			return true
+		} else {
+			if potentialQueen != Empty {
+				break
+			}
+		}
+	}
+
+	return false
+}
