@@ -156,7 +156,7 @@ func ValidKnightMove(move *player.Move, gameBoard *Board) bool {
 	verticalDistance := math.Abs(float64(move.FromRow - move.ToRow))
 	horizontalDistance := math.Abs(float64(move.FromCol - move.ToCol))
 
-	if horizontalDistance == 1 && verticalDistance == 2 {
+	if (horizontalDistance == 1 && verticalDistance == 2) || (horizontalDistance == 2 && verticalDistance == 1) {
 		return true
 	}
 
