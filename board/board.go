@@ -47,12 +47,12 @@ func InitializeBoard() *Board {
 }
 
 func RenderBoard(gameBoard *Board) {
-	var colNumber = HEIGHT
-	for col := 0; col < HEIGHT; col++ {
-		fmt.Print(colNumber)
-		colNumber--
+	var rowNumber = HEIGHT
+	for row := 0; row < HEIGHT; row++ {
+		fmt.Print(rowNumber)
+		rowNumber--
 
-		for row := 0; row < WIDTH; row++ {
+		for col := 0; col < WIDTH; col++ {
 			fmt.Print(" " + getBoardString(col, row, gameBoard) + " ")
 		}
 		fmt.Print("\n")
@@ -68,17 +68,6 @@ func RenderBoard(gameBoard *Board) {
 
 }
 
-// func GetWinner() Player or nil
-	//if there is a checkmate that team loses
-	//if there is a certain number of consecutive checks then there is a tie 
-
-// func AttemptMove() returns true or false if move was executed - false meaning it was an invalid move
-	//is move within board?
-		//is move not attacking same team?
-			//can the current piece move to the position being requested?
-				//would this move put the current team into check?
-
-//make this return the piece that was killed or empty if empty
 func AttemptMove(move *player.Move, gameBoard *Board) error {
 
 	if !moveWithinBoard(move) {
@@ -102,15 +91,15 @@ func AttemptMove(move *player.Move, gameBoard *Board) error {
 	
 	//empty from Pos
 	currentPiece := setBoardString(move.FromCol, move.FromRow, gameBoard, Empty)
+	kingX, kingY := currentTeamKingPos(move.WhitePlayer, gameBoard)
 
-	if inCheck(move, gameBoard) {
+	if inCheck(kingX, kingY, move.WhitePlayer, gameBoard) {
 		//undo the move
 		setBoardString(move.FromCol, move.FromRow, gameBoard, currentPiece)
 		setBoardString(move.ToCol, move.ToRow, gameBoard, toPiece)
 		
 		return errors.New("move puts in check")
-	} 
-	
+	}
 
 	return nil
 }
@@ -124,15 +113,15 @@ func pieceBelongsToPlayer(move *player.Move, gameBoard *Board) bool {
 	}
 
 	if move.WhitePlayer {
-		return pieceBelongsToWhiteTeam(&fromPiece)
+		return pieceBelongsToWhiteTeam(fromPiece)
 	} else {
-		return !pieceBelongsToWhiteTeam(&fromPiece)
+		return !pieceBelongsToWhiteTeam(fromPiece)
 	}
 }
 
-func pieceBelongsToWhiteTeam(piece *string) bool {
+func pieceBelongsToWhiteTeam(piece string) bool {
 	for _, v := range WhitePieces {
-		if *piece == v {
+		if piece == v {
 			return true
 		}
 	}
@@ -151,7 +140,7 @@ func moveAttackingSameTeam(move *player.Move, gameBoard *Board) bool {
 	var fromPiece = getBoardString(move.FromCol, move.FromRow, gameBoard)
 	var toPiece = getBoardString(move.ToCol, move.ToRow, gameBoard)
 
-	return pieceBelongsToWhiteTeam(&fromPiece) == pieceBelongsToWhiteTeam(&toPiece)
+	return fromPiece != Empty && toPiece != Empty && pieceBelongsToWhiteTeam(fromPiece) == pieceBelongsToWhiteTeam(toPiece)
 }
 
 func validPieceMove(move *player.Move, gameBoard *Board) bool {
@@ -176,13 +165,29 @@ func validPieceMove(move *player.Move, gameBoard *Board) bool {
 	}
 }
 
-func inCheck(move *player.Move, gameBoard *Board) bool {
-	return PawnInCheck(move, gameBoard) ||
-		QueenInCheck(move, gameBoard) ||
-		KingInCheck(move, gameBoard) || 
-		RookInCheck(move, gameBoard) || 
-		KnightInCheck(move, gameBoard) ||
-		BishopInCheck(move, gameBoard)
+func inCheck(kingX int, kingY int, whitePlayer bool, gameBoard *Board) bool {
+	check := false
+	if PawnInCheck(kingX, kingY, whitePlayer, gameBoard) {
+		fmt.Println("Pawn Check")
+		check = true
+	} else if KingInCheck(kingX, kingY, whitePlayer, gameBoard) {
+		fmt.Println("King Check")
+		check = true
+	} else if RookInCheck(kingX, kingY, whitePlayer, gameBoard) {
+		fmt.Println("Rook Check")
+		check = true
+	} else if KnightInCheck(kingX, kingY, whitePlayer, gameBoard) {
+		fmt.Println("Knight Check")
+		check = true
+	} else if BishopInCheck(kingX, kingY, whitePlayer, gameBoard) {
+		fmt.Println("Bishop Check")
+		check = true
+	} else if QueenInCheck(kingX, kingY, whitePlayer, gameBoard) {
+		fmt.Println("Queen Check")
+		check = true
+	}
+
+	return check
 }
 
 func getBoardString(col int, row int, gameBoard *Board) string {
@@ -195,4 +200,22 @@ func setBoardString(col int, row int, gameBoard *Board, piece string) string {
 	gameBoard.pieces[row][col] = piece
 
 	return currentPiece
+}
+
+func currentTeamKingPos(isWhiteTeam bool, gameBoard *Board) (int, int) {
+	kingX := 0
+	kingY := 0
+
+	for i := 0; i < WIDTH; i++ {
+		for j := 0; j < HEIGHT; j++ {
+			currentPiece := getBoardString(i, j, gameBoard)
+			if currentPiece == BKing && !isWhiteTeam || currentPiece == WKing && isWhiteTeam {
+				kingX = i
+				kingY = j
+				break
+			}
+		}
+	}
+
+	return kingX, kingY
 }

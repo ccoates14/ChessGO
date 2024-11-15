@@ -9,6 +9,8 @@ import (
 	"math"
 	"os"
 	"strings"
+	"strconv"
+	 "unicode/utf8"
 )
 
 func main() {
@@ -49,8 +51,8 @@ func main() {
 	
 	// piece
 
-	fmt.Print("Enter moves fromCol,fromRow,toCol,toRow\n")
-	fmt.Print("For example, 1,B,3,A\n")
+	fmt.Print("Enter moves fromCol,fromRow, toCol, toRow\n")
+	fmt.Print("For example, 1B 3A\n")
 	fmt.Print("This would move the white knight to the position 3A\n\n")
 
 
@@ -64,40 +66,57 @@ func gameLoop(gameBoard *board.Board) {
 	reader := bufio.NewReader(os.Stdin)
 	var move string
 	whiteMove := true
+	winnerIsWhiteTeam := true
+	done := false
 
-	for !gameOver() {
+	for !done {
 		//display board
 		board.RenderBoard(gameBoard)
 
 		//ask player for move
-		fmt.Print("\nEnter your move: ")
+		fmt.Println()
+		if whiteMove {
+			fmt.Print("White Team")
+		} else {
+			fmt.Print("Black Team")
+		}
+
+		fmt.Print(" enter your move: ")
 		move, _ = reader.ReadString('\n')
+
+		move = strings.Trim(move, "\n")
+
 		parsedMoved, err := parseMove(move)
 
 		if err != nil {
 			fmt.Println(err)
 		} else {
 			parsedMoved.WhitePlayer = whiteMove
-			whiteMove = !whiteMove
+
+			boardError := board.AttemptMove(&parsedMoved, gameBoard)
+
+			if boardError != nil {
+				fmt.Println(boardError)
+			} else {
+				done, winnerIsWhiteTeam = gameOver()
+				whiteMove = !whiteMove
+			}
 		}
+	}
 
-		//check legal move
-		boardError := board.AttemptMove(&parsedMoved, gameBoard)
-
-		if boardError != nil {
-			fmt.Println(boardError)
-		}
-
-		//is game over?
+	if winnerIsWhiteTeam {
+		fmt.Println("Winner is white team")
+	} else {
+		fmt.Println("Winner is black team")
 	}
 }
 
 func parseMove(move string) (player.Move, error) {
-	errorMessage := "Invalid move - must be XX XX, such as A8 - B6"
+	errorMessage := "Invalid move - must be XX XX, such as A8 B6"
 	moveStruct := player.Move{}
 
-	if len(move) != 5 {
-		return moveStruct, errors.New(errorMessage)
+	if utf8.RuneCountInString(move) != 5 {
+		return moveStruct, errors.New(errorMessage + ", string to long: " + strconv.Itoa(utf8.RuneCountInString(move)))
 	}
 
 	firstMove := strings.Split(move, " ")[0]
@@ -108,11 +127,12 @@ func parseMove(move string) (player.Move, error) {
 	}
 
 	//convert the string numbers into actual board numbers
-	moveStruct.FromCol = int(math.Abs(float64('A' - firstMove[0])))
-	moveStruct.FromRow = int(math.Abs(float64('1' - firstMove[1])))
+	moveStruct.FromCol = int(math.Abs(float64(int('A') - int(firstMove[0]))))
+	moveStruct.FromRow = int(math.Abs(math.Abs(float64(int('1') - int(firstMove[1]))) - float64(board.HEIGHT - 1)))
 
-	moveStruct.ToCol = int(math.Abs(float64('A' - secondMove[0])))
-	moveStruct.FromRow = int(math.Abs(float64('1' - secondMove[1])))
+
+	moveStruct.ToCol = int(math.Abs(float64(int('A') - int(secondMove[0]))))
+	moveStruct.ToRow = int(math.Abs(math.Abs(float64(int('1') - int(secondMove[1]))) - float64(board.HEIGHT - 1)))
 
 	return moveStruct, nil
 }
@@ -121,6 +141,6 @@ func validMovePart(movePart string) bool {
 	return movePart[0] >= 'A' && movePart[0] <= 'H' && movePart[1] >= '1' && movePart[1] <= '8'
 }
 
-func gameOver() bool {
-	return false
+func gameOver() (bool, bool) {
+	return false, false
 }
